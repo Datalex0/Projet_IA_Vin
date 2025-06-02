@@ -42,8 +42,8 @@ style ="""
         
         /* Variables couleurs cadre */
         [data-testid="stAppViewContainer"] {
-            --primary-color: #832F37;
-            --secondary-color: #9A4434;
+            --primary-color: #6D28D9;   /* Violet profond */
+            --secondary-color: #A78BFA; /* Lavande vive */
             --feature-bg: rgba(255, 255, 255, 0.05);
             --info-bg: rgba(255, 255, 255, 0.05);
             --border-color: rgba(255, 255, 255, 0.1);
@@ -72,3 +72,15 @@ style ="""
         }
     </style>
     """
+    
+            # --primary-color: #832F37;   /* Rouge */
+            # --secondary-color: #9A4434; /* Orange */
+                        
+            # --primary-color: #F97316;   /* Orange mandarine */
+            # --secondary-color: #FACC15; /* Jaune doré */
+
+            # --primary-color: #2E3A59;   /* Bleu-gris foncé */
+            # --secondary-color: #CBD5E1; /* Gris bleuté clair */
+
+            # --primary-color: #1E3A8A;   /* Bleu marine */
+            # --secondary-color: #3B82F6; /* Bleu clair */
