@@ -4,10 +4,13 @@ import csv
 
 ### Ajout du df au session_state
 def state_write(df):
+    '''Module permettant de stocker le Dataframe dans le Session State'''
     st.session_state['df'] = df
 
 ### Upload csv ou xlsx
 def import_fichier():
+    '''Module permettant d'importer un fichier CSV ou XLSX'''
+    
     file = st.file_uploader("Uploader un fichier (.csv ou .xlsx)", type=["csv", "xlsx"])
     button = st.button('importer')
 

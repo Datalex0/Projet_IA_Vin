@@ -24,7 +24,7 @@ use_df_vin =st.sidebar.checkbox("Utiliser le dataframe sur le vin")
 
 # Si l'utilisateur veut utiliser le df sur le vin
 if use_df_vin :
-    df = pd.read_csv("vin.csv")
+    df = pd.read_csv("data/vin.csv")
     # Enregistrement dans session_state
     st.success(f'✅ Données issues de "vin.csv" importées avec succès !')
     state_write(df)
