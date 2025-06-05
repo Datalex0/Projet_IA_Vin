@@ -12,7 +12,7 @@ Pipeline de Machine Learning permettant :
 
 
 ## Les éléments importants :
-- [Le lien vers l'application](https://pipeline-machine-learning.streamlit.app)
+- [Le lien vers l'application](https://pipeline-machine-learning.streamlit.app) (ctrl + clic pour l'ouvrir dans un nouvel onglet)
 - Les scripts Python
 - Le fichier vin.csv utilisé comme exemple pour le pipeline
 - [La Documentation Technique](https://github.com/Datalex0/Projet_IA_Vin/blob/6195a9bd69ad0ae27a58218909459656c6c9e104/Documentation%20Technique.pdf)
