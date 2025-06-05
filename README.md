@@ -1,7 +1,8 @@
-#  📈 Pipeline de Machine Learning 🤖
+#
+#  📈 Application Pipeline de Machine Learning 🤖
 
-
-## Présentation de l'Application
+#
+## 💡 Présentation de l'Application
 Pipeline de Machine Learning permettant :
 
 🧹 d'analyser et nettoyer le jeu de données fourni par l’utilisateur,
@@ -10,14 +11,15 @@ Pipeline de Machine Learning permettant :
 
 🔮 de faire des prédictions sur de nouvelles données
 
-
-## Les éléments importants :
+# 
+## 📌 Les éléments importants :
 - [Le lien vers l'application](https://pipeline-machine-learning.streamlit.app) (ctrl + clic pour l'ouvrir dans un nouvel onglet, si besoin cliquer sur le bouton pour "réveiller" l'application)
 - Les scripts Python
 - Le fichier vin.csv utilisé comme exemple pour le pipeline
 - [La Documentation Technique](https://github.com/Datalex0/Projet_IA_Vin/blob/6195a9bd69ad0ae27a58218909459656c6c9e104/Documentation%20Technique.pdf)
 
-## Votre parcours sur l'application
+#
+## 🛤️ Votre parcours sur l'application
 Vous serez guidé tout au long de votre parcours et passerez par les étapes suivantes :
 * Page 0 - 🏠 Accueil : Présentation générale de l’application
   
@@ -46,7 +48,8 @@ Vous serez guidé tout au long de votre parcours et passerez par les étapes sui
   -	Import de nouvelles données par saisie manuelle ou import CSV/XLSX
   -	Utilisation du modèle en mémoire ou import d’un autre modèle au format pickles pour effectuer des prédictions sur les nouvelles données
 
-## Points d'attention
+#
+## 🚨 Points d'attention
 *	Bien valider df_clean pour que l’entraînement fonctionne
 *	Vérifier le bon encodage des cibles pour les prédictions
 *	LabelEncoder doit être utilisé si on veut faire le décodage lors de la prédiction
