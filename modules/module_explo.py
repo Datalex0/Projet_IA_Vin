@@ -6,33 +6,62 @@ import seaborn as sns
 from fpdf import FPDF
 import tempfile
 from io import BytesIO
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 
-def select_distribution(df):
-   ''' Fonction permettant d'afficher la distributions des variables en sélectionnant 
-   celles que l'on souhaite afficher '''
-   colonnes = ["alcohol","malic_acid","ash","alcalinity_of_ash","magnesium","total_phenols","flavanoids","nonflavanoid_phenols","proanthocyanins","color_intensity","hue","od280/od315_of_diluted_wines","proline"]
-   selected_cols = st.multiselect("Sélectionnez les colonnes à afficher :", colonnes, default=["alcohol"], key="col_selector_1")
-   for col in selected_cols:
-    fig, ax = plt.subplots(figsize=(6, 5))
-    sns.histplot(df[col], kde=True, color='skyblue')
-    ax.set_title(f"Distribution de {col}")
-    st.pyplot(fig)
+### Onglet 3 - Corrélations ###
+
+def encoder_cible(df, target, methode, drop_first=False):
+    """Encode la target selon la méthode choisie par l'utilisateur"""
+    df_copy = df.copy()
+    encoded_target_name = "target_encoded"
+
+    if methode == "Label Encoding":
+        encoder = LabelEncoder()
+        df_copy["target_encoded"] = encoder.fit_transform(df_copy[target])
+        # Stockage du mapping inverse pour Label Encoding pour afficher les valeurs initiales avant encodage lors de la prédiction
+        st.session_state["mapping_target"] = {i: label for i, label in enumerate(encoder.classes_)}
+
+    elif methode == "One-Hot Encoding":
+        ohe = OneHotEncoder(sparse_output=False, drop='first' if drop_first else None)
+        encoded_data = ohe.fit_transform(df_copy[[target]])
+        encoded_cols = ohe.get_feature_names_out([target])
+        df_encoded = pd.DataFrame(encoded_data, columns=encoded_cols, index=df_copy.index)
+        # df_copy = pd.concat([df_copy.drop(columns=[target]), df_encoded], axis=1)
+        df_copy = pd.concat([df_copy, df_encoded], axis=1)
+        df_copy = df_copy.loc[:, ~df_copy.columns.duplicated()].copy()
+        encoded_target_name = encoded_cols.tolist()  # Liste de colonnes encodées
+        
+        # Stockage du mapping inverse pour One-Hot pour afficher les valeurs initiales avant encodage lors de la prédiction
+        mapping_inv = {}
+        for full_col in encoded_cols:
+            # Exemple : 'target_classname'
+            if "_" in full_col:
+                original_value = full_col.split("_", 1)[1]
+                mapping_inv[full_col] = original_value
+        st.session_state["mapping_target"] = mapping_inv
+
+    elif methode == "get_dummies":
+        df_copy = pd.get_dummies(df_copy, columns=[target], drop_first=drop_first)
+        df_copy = df_copy.loc[:, ~df_copy.columns.duplicated()].copy()
+        encoded_cols = [col for col in df_copy.columns if col.startswith(target + "_")]
+        encoded_target_name = encoded_cols  # Liste des colonnes générées
+        
+        # Stockage du mapping inverse pour get_dummies
+        mapping_inv = {}
+        for col_name in encoded_cols:
+            original_value = col_name.split("_", 1)[1]
+            mapping_inv[col_name] = original_value
+        st.session_state["mapping_target"] = mapping_inv
+
+    else:
+        raise ValueError("Méthode d'encodage non reconnue.")
+
+    st.session_state["target_corr"] = encoded_target_name  # MAJ de la variable
+    return df_copy, encoded_target_name
 
 
-def select_pairplot(df):
-   ''' Fonction permettant d'afficher les pairplots des variables en sélectionnant 
-   celles que l'on souhaite afficher '''
-   pairplot_cols = ["alcohol","malic_acid","ash","alcalinity_of_ash","magnesium","total_phenols","flavanoids","nonflavanoid_phenols","proanthocyanins","color_intensity","hue","od280/od315_of_diluted_wines","proline", "target"]
-   selected_cols_pairplot = st.multiselect("Sélectionnez les colonnes à afficher :", pairplot_cols, default=["target", "alcohol"], key="col_selector_2")
-   for col in selected_cols_pairplot:
-    fig, ax = plt.subplots(figsize=(5, 5))
-    fig = sns.pairplot(df[selected_cols_pairplot], hue="target" if "target" in selected_cols_pairplot else None)
-    ax.set_title(f"Distribution de {col}")
-    st.pyplot(fig)
 
-
-
-### Onglet 4 ###
+### Onglet 4 - NaN et Outliers ###
 
 def detecter_outliers_zscore(df, seuil=3.0):
     """Retourne un DataFrame booléen où True indique un outlier selon le Z-score."""
@@ -70,8 +99,73 @@ def traiter_outliers(df, numeric_cols, outliers_bool, action="Supprimer les lign
         return df_copy
     return df
 
-        
-### Onglet 5 ###
+
+
+### Onglet 5 - Standardisation ###
+
+def standardisation(df, colonne_target):
+    # Affichage du df avant standardisation
+    st.markdown("**Aperçu du Dataframe AVANT Standardisation**")
+    st.dataframe(df.head())
+    st.write("***")
+    # définir un seuil de proximité de 0
+    threshold = 0.1
+    # tester si la deviation std et la moyenne sont proche de 0
+    cols_to_test = [col for col in df.columns if col != colonne_target and pd.api.types.is_numeric_dtype(df[col])]
+    close_to_zero_std = (df[cols_to_test].std().sub(1).abs() < threshold).all()
+    close_to_zero_mean = (df[cols_to_test].mean().abs() < threshold).all()
+    
+    # Si les 2 sont déjà proches de 0 
+    if close_to_zero_std and close_to_zero_mean:
+        st.write("Vos données semblent déjà standardisées")
+    else:
+        st.write("Vos données ne semblent pas standardisées")
+        standard_box = st.checkbox('Standardiser', key="appli_standardisation")
+        if standard_box:
+            standardize_data(df, colonne_target)
+
+def standardize_data(df, colonne_target):
+    # Convertir en liste si besoin
+    if isinstance(colonne_target, str):
+        colonne_target = [colonne_target]
+    
+    non_numeric_columns = [col for col in df.columns if not pd.api.types.is_numeric_dtype(df[col])]
+    non_standardizable_columns = [col for col in non_numeric_columns if col not in colonne_target]
+    
+    if non_standardizable_columns:
+        st.write("Colonnes qui ne sont pas numériques et ne peuvent pas être standardisées :")
+        for col in non_standardizable_columns:
+            st.write(col)
+            
+    standardizable_columns = [
+        col for col in df.columns 
+        if col not in non_standardizable_columns 
+        and col not in colonne_target
+        and pd.api.types.is_numeric_dtype(df[col])
+                              ]
+    
+    if standardizable_columns:
+        scaler = StandardScaler()
+        df[standardizable_columns] = scaler.fit_transform(df[standardizable_columns])
+        st.success("✅ Les colonnes standardisables ont été standardisées avec succès.")
+        # Stockage des session_states pour le résumé et pour la prédiction sur les nouvelles données
+        st.session_state["standardized"] = True
+        st.session_state["scaler"] = scaler
+        st.session_state["standardized_columns"] = standardizable_columns
+        st.session_state["standardized_stats"] = df[standardizable_columns].agg(['mean', 'std']).T.round(2)
+        # Affichage du df après standardisation
+        st.write("***")
+        st.markdown("**Aperçu du Dataframe APRÈS Standardisation**")
+        st.dataframe(df[standardizable_columns].head())
+    else:
+        st.warning("Aucune colonne standardisable n'a été trouvée.")
+        st.session_state["standardized"] = False
+    
+    st.session_state["df_clean"] = df
+            
+            
+
+    ### Onglet 6 - Résumé & Exports ###
 
 def telecharger_donnees(df_clean):
     st.subheader("Télécharger les données")
@@ -91,7 +185,7 @@ def telecharger_donnees(df_clean):
         file_name="donnees_nettoyees.xlsx"
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     
-    st.success(f"✅ Fichier {file_name} prêt à être téléchargé avec succès.")
+    st.success(f"✅ Fichier {file_name} prêt à être téléchargé.")
     st.download_button("📥 Télécharger les données nettoyées", data=data, file_name=file_name, mime=mime)
 
     
@@ -122,6 +216,7 @@ def generer_rapport_pdf(df, df_clean, target, to_keep, task, to_drop, corr):
         fig1, ax1 = plt.subplots()
         sns.histplot(df[target].dropna(), kde=True, ax=ax1)
         ax1.set_title(f"Distribution de {target}")
+        fig1.tight_layout()
         tmpimg = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
         fig1.savefig(tmpimg.name)
         plt.close(fig1)
@@ -132,6 +227,7 @@ def generer_rapport_pdf(df, df_clean, target, to_keep, task, to_drop, corr):
     fig2, ax2 = plt.subplots(figsize=(6, 5))
     sns.heatmap(corr, annot=False, cmap="coolwarm", ax=ax2)
     ax2.set_title("Matrice de corrélation")
+    fig2.tight_layout()
     tmpimg2 = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     fig2.savefig(tmpimg2.name)
     plt.close(fig2)
@@ -147,6 +243,7 @@ def generer_rapport_pdf(df, df_clean, target, to_keep, task, to_drop, corr):
         sns.barplot(x=counts.index, y=counts.values, ax=ax3)
         ax3.set_title(f"Répartition de {top_cat}")
         plt.xticks(rotation=45)
+        fig3.tight_layout()
         tmpimg3 = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
         fig3.savefig(tmpimg3.name)
         plt.close(fig3)

@@ -16,12 +16,33 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-st.info(
-    "Utilisez le menu de gauche pour naviguer dans l'application :\n\n"
-    "- Import\n"
-    "- Exploration\n"
-    "- Traitement\n"
-    "- Entraînement\n"
-    "- Evaluation\n"
-    "- Prédiction"
-)
+with st.expander("ℹ️ Fonctionnement"):
+    st.info("""
+        Tout au long de votre parcours, des onglets rétractables comme celui-ci vous aideront dans l'utilisation de l'application.\n
+        Vous utiliserez le menu de gauche pour naviguer dans les pages de l'application et certaines pages comportent également des onglets.
+    """)
+    
+st.markdown("""
+            ## Dans cette application, voici ce que vous allez pouvoir faire dans les différentes pages :\n
+            - ### 📥 Import des données : 
+                * Importer vos données ou utiliser le dataset déjà enregistré et supprimer les colonnes non désirées.      
+            - ### 🔍 Exploration et Traitements : 
+                * Choisir la colonne cible et si vous voulez faire de la Classification ou de la Régression,
+                * Observer la distribution des variables,
+                * Encoder la cible si besoin puis observer les corrélations et choisir les colonnes à conserver en fonction,
+                * Effectuer la gestion des valeurs manquantes et des valeurs aberrantes,
+                * Standardiser les données si nécessaire,
+                * Exporter le résultat en CSV ou XLSX et générer un rapport PDF des observations et traitements effectués.                
+            - ### 🦾 Entraînement d'un modèle : 
+                * Effectuer la séparation du jeu de données (entraînement/test) puis sélectionner le meilleur modèle pour votre modélisation,
+                * Entraîner le modèle sélectionné et l'exporter au format pickles,
+                * Optimiser automatiquement les Hyperparamètres puis exporter le modèle optimisé au format pickles.                
+            - ### 📝 Évaluations : 
+                * Évaluer les performances du modèle
+            - ### 🔮 Prédictions : 
+                * Effectuer des Prédictions sur de nouvelles données
+            """)
+
+
+    
+    

@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from modules.module_import import state_write, import_fichier
 from config import style
+from routes import redirection
 
 # Style adaptatif pour le mode clair/sombre
 st.markdown(style, unsafe_allow_html=True)
@@ -10,17 +11,18 @@ st.markdown(style, unsafe_allow_html=True)
 st.markdown("""
     <div class="main-header">
         <h1>📥 Import des données</h1>
-        <p style="font-size: 1.2em; margin-top: 1rem;">
-            Importez votre fichier Excel ou CSV
-        </p>
-        <p style="font-size: 1.2em; margin-top: 1rem;">
-            ou cochez directement la case sur votre gauche pour utiliser le dataframe préenregistré sur le vin
-        </p>
     </div>
     """, unsafe_allow_html=True)
 
+with st.expander("ℹ️ Fonctionnement"):
+    st.info("""
+    Importez votre fichier Excel ou CSV en cliquant sur "Browse files" ou en glissant votre fichier directement dans la zone grise.\n
+    Vous pouvez également directement cocher la case sur votre gauche pour utiliser le dataset préenregistré sur le vin.
+    """)
+# st.title("Veuillez charger votre fichier CSV ou XLSX.")
+# st.subheader("Vous pouvez également cocher directement la case sur votre gauche pour utiliser le dataframe préenregistré sur le vin ")
 
-use_df_vin =st.sidebar.checkbox("Utiliser le dataframe sur le vin")
+use_df_vin =st.sidebar.checkbox("Utiliser le dataset sur le vin")
 
 # Si l'utilisateur veut utiliser le df sur le vin
 if use_df_vin :
@@ -39,6 +41,10 @@ if "df" not in st.session_state:
     st.stop()
 else:
     df = st.session_state["df"]
+
+    # Met à jour le dataframe dans session_state
+    state_write(df)
+
     try:
         st.markdown(f"### Affichage des 10 premières lignes du Dataframe :")
         st.write(df.head(10))
@@ -60,5 +66,21 @@ else:
                     len(df.columns),
                     help="Nombre total de colonnes dans le dataset"
                 )
+
     except:
         st.stop()
+
+    # Suppression de colonnes inutiles
+    st.write("***")
+    st.markdown("### 🧹 Suppression des colonnes inutiles")
+    colonnes_a_supprimer = st.multiselect(
+        "Sélectionner des colonnes à supprimer :",
+        options=df.columns.tolist()
+    )
+    if colonnes_a_supprimer:
+        df.drop(columns=colonnes_a_supprimer, inplace=True)
+        st.success(f"✅ Colonnes supprimées : {', '.join(colonnes_a_supprimer)}")
+        state_write(df)
+    
+    # Redirection page suivante
+    redirection("🔍 Exploration et Traitements", "2_Exploration")

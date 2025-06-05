@@ -9,4 +9,4 @@ st.set_page_config(page_title="Appli Pipeline",
 
 
 pages = st.navigation(routes)
-pages.run()
+pages.run() 
